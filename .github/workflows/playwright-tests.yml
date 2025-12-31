@@ -1,0 +1,66 @@
+name: Demo Tests CI/CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Select environment to run tests'
+        required: true
+        default: 'local'
+        type: choice
+        options:
+          - local
+          - staging
+          - production
+      test_tag:
+        description: 'Test tag to run (leave blank to run all tests)'
+        required: false
+        type: string
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.19.0'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright
+        run: npx playwright install
+
+      - name: Run tests
+        env:
+          ENV_NAME: ${{ inputs.environment }}
+        run: |
+          if [ -z "${{ inputs.test_tag }}" ]; then
+            echo "Running all tests..."
+            npx playwright test
+          else
+            echo "Running tests with tag: ${{ inputs.test_tag }}"
+            npx playwright test -g "${{ inputs.test_tag }}"
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ inputs.environment }}
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Publish test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ inputs.environment }}
+          path: test-results/
+          retention-days: 30
