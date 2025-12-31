@@ -12,9 +12,7 @@ class LoginPage extends BasePage {
 
     constructor(options: { page: Page }) {
         super(options);
-        // this.txtUsername = this.page.locator('input#loginusername');
-        this.txtUsername = this.page.getByRole("textbox", { name: "Username" });
-
+        this.txtUsername = this.page.locator('input#loginusername');
         this.txtPassword = this.page.locator('input#loginpassword');
         this.lnkLogin = this.page.getByRole("link", { name: "Log in" });
         this.btnLogin = this.page.getByRole("button", { name: "Log in" });
