@@ -16,6 +16,16 @@ on:
         description: 'Test tag to run (leave blank to run all tests)'
         required: false
         type: string
+      workers:
+        description: 'Number of workers'
+        required: false
+        default: '2'
+        type: string
+      retries:
+        description: 'Number of retries for failed tests'
+        required: false
+        default: '1'
+        type: string
 
 jobs:
   test:
@@ -41,12 +51,23 @@ jobs:
         env:
           ENV_NAME: ${{ inputs.environment }}
         run: |
+          WORKERS="${{ inputs.workers }}"
+          RETRIES="${{ inputs.retries }}"
+          
+          if [ -z "$WORKERS" ]; then
+            WORKERS="2"
+          fi
+          
+          if [ -z "$RETRIES" ]; then
+            RETRIES="1"
+          fi
+          
           if [ -z "${{ inputs.test_tag }}" ]; then
-            echo "Running all tests..."
-            npx playwright test
+            echo "Running all tests with $WORKERS workers and $RETRIES retries..."
+            npx playwright test --workers=$WORKERS --retries=$RETRIES
           else
-            echo "Running tests with tag: ${{ inputs.test_tag }}"
-            npx playwright test -g "${{ inputs.test_tag }}"
+            echo "Running tests with tag: ${{ inputs.test_tag }}, $WORKERS workers and $RETRIES retries..."
+            npx playwright test -g "${{ inputs.test_tag }}" --workers=$WORKERS --retries=$RETRIES
           fi
 
       - name: Upload test results
